@@ -1,0 +1,117 @@
+{
+  "name": "Padel ML Automation Pipeline",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 8
+            },
+            {}
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        0,
+        0
+      ],
+      "id": "18aeafe2-ea10-4111-83f1-a8ba567cfca1",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "fileSelector": "C:\\Users\\Ahmed\\.n8n-files\\clean_dim_ranking.csv",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1.1,
+      "position": [
+        208,
+        0
+      ],
+      "id": "8c36837d-29ed-4183-8d62-86d200f550fc",
+      "name": "Read/Write Files from Disk"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://127.0.0.1:8000/predict/elite",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\n  \"points\": 500,\n  \"points_log\": 6.21,\n  \"move\": 5,\n  \"gender_encoded\": 1,\n  \"top_country\": 1\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        416,
+        0
+      ],
+      "id": "d4af194f-194e-45b4-87f9-b454a748db65",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "jsCode": "const prediction = $input.item.json;\nconst timestamp = new Date().toISOString();\n\nconst output = {\n  timestamp: timestamp,\n  prediction: prediction.prediction,\n  label: prediction.label,\n  elite_probability: prediction.elite_probability,\n  business_insight: prediction.business_insight,\n  status: \"✅ Pipeline executed successfully\"\n};\n\nreturn [{ json: output }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        624,
+        0
+      ],
+      "id": "645c3435-b081-4396-a65d-e3701f6588e5",
+      "name": "Code in JavaScript"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Read/Write Files from Disk",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read/Write Files from Disk": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "2d34e07f-f4bd-4046-9ae7-de401cff8369",
+  "meta": {
+    "instanceId": "3a4c6af65b8e8fd466463cf17087c0db93c94005e9e809ce45b5078819ace418"
+  },
+  "id": "zTcCkxCtXIpO1Xnr",
+  "tags": []
+}
